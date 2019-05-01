@@ -18,6 +18,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import multiprocessing as mp
+from astropy.io import fits
 
 #=============================================================================#
 #/////////////////////////////////////////////////////////////////////////////#
@@ -148,18 +149,30 @@ class ARIEL_dataset_creator:
         _data = _df_content.values.astype(float).T
         _data -= self.percentiles; _data /= (1-self.percentiles);
         _data[_data!=_data] = 1
-        return _data.T
+        return _data
         
     def target_loader(self,file_path):
         _content = np.loadtxt(self.target_path+file_path,delimiter='\t')
         return _content 
+        
+    def flux_rounder(self,_image):
+        _intervals = np.arange(0,1,0.025)
+        _drop = 1 - np.nanpercentile(_image,1)
+        _rounded_drop = _intervals[np.abs(_intervals-_drop).argmin()]
+        _rounded_drop_truncated = np.around(_rounded_drop,decimals=3)
+        return _rounded_drop_truncated
             
     def make_all_data(self,_file):
         _image = self.image_maker(_file)
+        _rounded_drop = self.flux_rounder(_image)
         _target = self.target_loader(_file)
-        _grouped_data = np.vstack([_target,_image])
-        _df_grouped_data = pd.DataFrame(_grouped_data.T)
-        _df_grouped_data.to_pickle(self.save_path+_file[:-4]+'.pkl')
+        hdu1 = fits.ImageHDU(_image); hdu1.name = "IMAGE"
+        hdu2 = fits.ImageHDU(_target); hdu2.name = "TARGETS"
+        hdr = fits.Header(); hdr['DROP'] = _rounded_drop
+        primary_hdu = fits.PrimaryHDU(header=hdr)
+        hdul = fits.HDUList([primary_hdu,hdu1,hdu2])
+        hdul.writeto(self.save_path+_file[:-4]+'.fits',overwrite=True)
+        hdul.close()
         return
         
     def pool_session(self,processors):

@@ -10,10 +10,6 @@ Created on Mon Apr 29 09:33:39 2019
 
 from explore_data import ARIEL_data, ARIEL_targets, ARIEL_dataset_creator
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 #=============================================================================#
 #/////////////////////////////////////////////////////////////////////////////#
 #=============================================================================#
