@@ -65,10 +65,18 @@ if target_dists == True:
     _target_files = ARIEL_targets().filename_collector(initial_path=_target_path)
     _distribution_1 = ARIEL_targets().target_distribution(_target_files,54,save_path=_save_path) 
 
-_path = "/home/anubis/c1307135/ARIEL/noisy_train/"
-_target_path = '/home/anubis/c1307135/ARIEL/params_train/'
-_save_path = '/home/anubis/c1307135/ARIEL/TRAIN_FLUX/'
-_perc_path = '/home/corona/c1307135/Holy_Grail/test_images/channel_percentiles.pkl'
-ARIEL_dataset_creator(data_path=_path,target_path=_target_path,save_path=_save_path,
-                      bin_width=5,percentile_path=_perc_path).pool_session(processors=14)
-    
+pool_session = True
+if pool_session == True:
+    _path = "/home/anubis/c1307135/ARIEL/noisy_test/"
+    _target_path = '/home/anubis/c1307135/ARIEL/params_train/'
+    _save_path = '/home/anubis/c1307135/ARIEL/noisy_test_fits/'
+    _perc_path = '/home/corona/c1307135/Holy_Grail/test_images/channel_percentiles.pkl'
+    ARIEL_dataset_creator(data_path=_path,target_path=None,save_path=_save_path,
+                          bin_width=5,percentile_path=_perc_path).pool_session(processors=14)
+                          
+data_test = False
+if data_test == True:
+    _path = "/home/anubis/c1307135/ARIEL/noisy_test/"
+    _save_path = '/home/corona/c1307135/Holy_Grail/test_images/'
+    _filenames = ARIEL_data().filename_collector(initial_path=_path)   
+    ARIEL_data().data_loader(_path+_filenames[0],bin_width=10)    

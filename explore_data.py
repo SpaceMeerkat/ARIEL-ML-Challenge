@@ -141,6 +141,8 @@ class ARIEL_dataset_creator:
     def image_maker(self,file_path):
         if self.percentiles is None:
             self.percentile_loader()
+        _test_content = pd.read_csv(self.data_path+file_path,sep='\n',header=None,nrows=5)
+        _radius = _test_content.iloc[2].values[0].split(': ')[1]
         _content = np.loadtxt(self.data_path+file_path,delimiter='\t').T
         _content = pd.DataFrame(_content); _content[_content.iloc[:,:]>1]=np.nan;
         _step = self.bin_width; _dt = np.arange(0,301,_step);
@@ -149,10 +151,13 @@ class ARIEL_dataset_creator:
         _data = _df_content.values.astype(float).T
         _data -= self.percentiles; _data /= (1-self.percentiles);
         _data[_data!=_data] = 1
-        return _data
+        return _data,_radius
         
     def target_loader(self,file_path):
-        _content = np.loadtxt(self.target_path+file_path,delimiter='\t')
+        if self.target_path is not None:
+            _content = np.loadtxt(self.target_path+file_path,delimiter='\t')
+        else:
+            _content = [np.nan]*55
         return _content 
         
     def flux_rounder(self,_image):
@@ -163,13 +168,13 @@ class ARIEL_dataset_creator:
         return _rounded_drop_truncated
             
     def make_all_data(self,_file):
-        _image = self.image_maker(_file)
+        _image, _radius = self.image_maker(_file)
         _rounded_drop = self.flux_rounder(_image)
         _target = self.target_loader(_file)
         hdu1 = fits.ImageHDU(_image); hdu1.name = "IMAGE"
         hdu2 = fits.ImageHDU(_target); hdu2.name = "TARGETS"
-        hdr = fits.Header(); hdr['DROP'] = _rounded_drop
-        primary_hdu = fits.PrimaryHDU(header=hdr)
+        hdr = fits.Header(); hdr['DROP'] = _rounded_drop; hdr['RSTAR'] = _radius;
+        primary_hdu = fits.PrimaryHDU(header=hdr)            
         hdul = fits.HDUList([primary_hdu,hdu1,hdu2])
         hdul.writeto(self.save_path+_file[:-4]+'.fits',overwrite=True)
         hdul.close()
