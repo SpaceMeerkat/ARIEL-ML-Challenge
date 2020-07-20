@@ -44,7 +44,10 @@ class epoch_plotter:
         plt.fill_between(self.train_epoch,_train_up,_train_down,color='b',alpha=0.5)
         plt.plot(self.test_epoch,self.test_mu,'r-')
         plt.fill_between(self.test_epoch,_test_up,_test_down,color='r',alpha=0.5)
-        plt.ylim(0,np.max(self.train_mu))
+        plt.ylim(0,0.0002)
+        plt.title('Accuracy: '+str(self.test_mu[-1]))
         plt.savefig(self.save_path)
+        plt.close('all')
+        return
         
         
